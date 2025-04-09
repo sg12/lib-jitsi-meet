@@ -62,7 +62,7 @@
     "build:webpack": "webpack",
     "build:webpack-dev": "npm run gen-version && webpack --mode development",
     "build:tsc": "tsc --build --clean && tsc",
-    "gen-types": "tsc --declaration --emitDeclarationOnly --outFile types/index.d.ts",
+    "gen-types": "tsc --declaration --emitDeclarationOnly --outDir types",
     "gen-version": "node tools/gen-version.js",
     "lint": "eslint . --max-warnings 0",
     "lint-fix": "eslint . --max-warnings 0 --fix",
@@ -76,7 +76,7 @@
   "browser": "dist/umd/lib-jitsi-meet.min.js",
   "module": "dist/esm/JitsiMeetJS.js",
   "react-native": "./dist/esm/JitsiMeetJS.js",
-  "types": "types/index.d.ts",
+  "types": "types/JitsiMeetJS.d.ts",
   "files": [
     "dist",
     "types"
