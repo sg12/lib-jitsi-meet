@@ -7052,7 +7052,7 @@ declare module "modules/statistics/LocalStatsCollector" {
          */
         constructor(stream: any, interval: any, callback: any);
         stream: any;
-        intervalId: NodeJS.Timer;
+        intervalId: NodeJS.Timeout;
         intervalMilis: any;
         audioLevel: number;
         callback: any;
@@ -7196,7 +7196,7 @@ declare module "modules/statistics/PerformanceObserverStats" {
         startObserver(): void;
         longTaskEventHandler: (list: any) => void;
         observer: PerformanceObserver;
-        longTasksIntervalId: NodeJS.Timer;
+        longTasksIntervalId: NodeJS.Timeout;
         _lastTimeStamp: number;
         /**
          * Stops the performance observer.
@@ -7239,12 +7239,12 @@ declare module "modules/statistics/RTPStatsCollector" {
         peerconnection: any;
         currentStatsReport: any;
         previousStatsReport: any;
-        audioLevelsIntervalId: NodeJS.Timer;
+        audioLevelsIntervalId: NodeJS.Timeout;
         eventEmitter: any;
         conferenceStats: ConferenceStats;
         audioLevelsIntervalMilis: any;
         speakerList: any[];
-        statsIntervalId: NodeJS.Timer;
+        statsIntervalId: NodeJS.Timeout;
         statsIntervalMilis: any;
         /**
          * Maps SSRC numbers to {@link SsrcStats}.
@@ -15750,7 +15750,7 @@ declare module "modules/webaudio/AudioMixer" {
     }
 }
 declare module "version" {
-    export const COMMIT_HASH = "58d02d9e";
+    export const COMMIT_HASH = "d4714e7b";
 }
 declare module "JitsiMeetJS" {
     import * as JitsiConferenceErrors from "JitsiConferenceErrors";

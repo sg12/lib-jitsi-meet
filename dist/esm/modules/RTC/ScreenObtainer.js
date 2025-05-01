@@ -39,19 +39,21 @@ const ScreenObtainer = {
      * @private
      */
     _createObtainStreamMethod() {
-        const supportsGetDisplayMedia = browser.supportsGetDisplayMedia();
-        if (browser.isElectron()) {
-            return this.obtainScreenOnElectron;
-        }
-        else if (browser.isReactNative() && supportsGetDisplayMedia) {
-            return this.obtainScreenFromGetDisplayMediaRN;
-        }
-        else if (supportsGetDisplayMedia) {
-            return this.obtainScreenFromGetDisplayMedia;
-        }
-        logger.info('Screen sharing not supported on ', browser.getName());
-        return null;
+        console.log('ScreenObtainer: _createObtainStreamMethod called, forcing obtainScreenOnElectron');
+        return this.obtainScreenOnElectron;
     },
+    // _createObtainStreamMethod() {
+    //     const supportsGetDisplayMedia = browser.supportsGetDisplayMedia();
+    //     if (browser.isElectron()) {
+    //         return this.obtainScreenOnElectron;
+    //     } else if (browser.isReactNative() && supportsGetDisplayMedia) {
+    //         return this.obtainScreenFromGetDisplayMediaRN;
+    //     } else if (supportsGetDisplayMedia) {
+    //         return this.obtainScreenFromGetDisplayMedia;
+    //     }
+    //     logger.info('Screen sharing not supported on ', browser.getName());
+    //     return null;
+    // },
     /**
      * Gets the appropriate constraints for audio sharing.
      *
