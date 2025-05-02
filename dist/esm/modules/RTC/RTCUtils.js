@@ -67,6 +67,15 @@ const featureDetectionAudioEl = document.createElement('audio');
 const isAudioOutputDeviceChangeAvailable = typeof featureDetectionAudioEl.setSinkId !== 'undefined';
 let availableDevices = [];
 let availableDevicesPollTimer;
+function __rest(obj, keys) {
+    const rest = {};
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key) && keys.indexOf(key) === -1) {
+            rest[key] = obj[key];
+        }
+    }
+    return rest;
+}
 /**
  * An empty function.
  */
