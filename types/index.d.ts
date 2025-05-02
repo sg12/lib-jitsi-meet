@@ -7739,7 +7739,7 @@ declare module "modules/RTC/RTCUtils" {
          * track. If an error occurs, it will be deferred to the caller for
          * handling.
          */
-        obtainAudioAndVideoPermissions: (options: {
+        obtainAudioAndVideoPermissions(options: {
             devices: string[];
             desktopSharingFrameRate: {
                 min: any;
@@ -7747,7 +7747,7 @@ declare module "modules/RTC/RTCUtils" {
             };
             desktopSharingSourceDevice: string;
             desktopSharingSources: Array<string>;
-        }) => Promise<any>;
+        }): Promise<any>;
         /**
          * Checks whether it is possible to enumerate available cameras/microphones.
          *
@@ -15750,7 +15750,7 @@ declare module "modules/webaudio/AudioMixer" {
     }
 }
 declare module "version" {
-    export const COMMIT_HASH = "20f8a129";
+    export const COMMIT_HASH = "5f2ee4bf";
 }
 declare module "JitsiMeetJS" {
     import * as JitsiConferenceErrors from "JitsiConferenceErrors";

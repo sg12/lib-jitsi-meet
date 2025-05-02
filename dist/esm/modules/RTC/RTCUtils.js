@@ -1,11 +1,13 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
 };
 import { getLogger } from '@jitsi/logger';
 import { cloneDeep } from 'lodash-es';
@@ -23,7 +25,6 @@ import Listenable from '../util/Listenable';
 import { isValidNumber } from '../util/MathUtil';
 import screenObtainer from './ScreenObtainer';
 const logger = getLogger('modules/RTC/RTCUtils');
-const desktopCapturer = window.electron_bridge ? window.electron_bridge.desktopCapturer : undefined;
 const AVAILABLE_DEVICES_POLL_INTERVAL_TIME = 3000; // ms
 /**
  * Default MediaStreamConstraints to use for calls to getUserMedia.
@@ -218,323 +219,6 @@ function sendDeviceListToAnalytics(deviceList) {
  *
  */
 class RTCUtils extends Listenable {
-    constructor() {
-        super(...arguments);
-        /**
-         * Gets streams from specified device types. This function intentionally
-         * ignores errors for upstream to catch and handle instead.
-         *
-         * @param {Object} options - A hash describing what devices to get and
-         * relevant constraints.
-         * @param {string[]} options.devices - The types of media to capture. Valid
-         * values are "desktop", "audio", and "video".
-         * @param {Object} options.desktopSharingFrameRate
-         * @param {Object} options.desktopSharingFrameRate.min - Minimum fps
-         * @param {Object} options.desktopSharingFrameRate.max - Maximum fps
-         * @param {String} options.desktopSharingSourceDevice - The device id or
-         * label for a video input source that should be used for screensharing.
-         * @param {Array<string>} options.desktopSharingSources - The types of sources ("screen", "window", etc)
-         * from which the user can select what to share.
-         * @returns {Promise} The promise, when successful, will return an array of
-         * meta data for the requested device type, which includes the stream and
-         * track. If an error occurs, it will be deferred to the caller for
-         * handling.
-         */
-        // obtainAudioAndVideoPermissions(options) {
-        //     const {
-        //         timeout,
-        //         ...otherOptions
-        //     } = options;
-        //     const mediaStreamsMetaData = [];
-        //     let constraints = {};
-        //     // Declare private functions to be used in the promise chain below.
-        //     // These functions are declared in the scope of this function because
-        //     // they are not being used anywhere else, so only this function needs to
-        //     // know about them.
-        //     /**
-        //      * Executes a request for desktop media if specified in options.
-        //      *
-        //      * @returns {Promise}
-        //      */
-        //     const maybeRequestDesktopDevice = function() {
-        //         const umDevices = otherOptions.devices || [];
-        //         const isDesktopDeviceRequested
-        //             = umDevices.indexOf('desktop') !== -1;
-        //         if (!isDesktopDeviceRequested) {
-        //             return Promise.resolve();
-        //         }
-        //         const {
-        //             desktopSharingSourceDevice,
-        //             desktopSharingSources
-        //         } = otherOptions;
-        //         // Attempt to use a video input device as a screenshare source if
-        //         // the option is defined.
-        //         if (desktopSharingSourceDevice) {
-        //             const matchingDevice
-        //                 = availableDevices && availableDevices.find(device =>
-        //                     device.kind === 'videoinput'
-        //                         && (device.deviceId === desktopSharingSourceDevice
-        //                         || device.label === desktopSharingSourceDevice));
-        //             if (!matchingDevice) {
-        //                 return Promise.reject(new JitsiTrackError(
-        //                     { name: 'ConstraintNotSatisfiedError' },
-        //                     {},
-        //                     [ desktopSharingSourceDevice ]
-        //                 ));
-        //             }
-        //             const requestedDevices = [ 'video' ];
-        //             const deviceConstraints = {
-        //                 video: {
-        //                     deviceId: matchingDevice.deviceId
-        //                     // frameRate is omited here on purpose since this is a device that we'll pretend is a screen.
-        //                 }
-        //             };
-        //             return this._getUserMedia(requestedDevices, deviceConstraints, timeout)
-        //                 .then(stream => {
-        //                     return {
-        //                         sourceType: 'device',
-        //                         stream
-        //                     };
-        //                 });
-        //         }
-        //         return this._getDesktopMedia({ desktopSharingSources });
-        //     }.bind(this);
-        //     /**
-        //      * Creates a meta data object about the passed in desktopStream and
-        //      * pushes the meta data to the internal array mediaStreamsMetaData to be
-        //      * returned later.
-        //      *
-        //      * @param {MediaStreamTrack} desktopStream - A track for a desktop
-        //      * capture.
-        //      * @returns {void}
-        //      */
-        //     const maybeCreateAndAddDesktopTrack = function(desktopStream) {
-        //         if (!desktopStream) {
-        //             return;
-        //         }
-        //         const { stream, sourceId, sourceType } = desktopStream;
-        //         const desktopAudioTracks = stream.getAudioTracks();
-        //         if (desktopAudioTracks.length) {
-        //             const desktopAudioStream = new MediaStream(desktopAudioTracks);
-        //             mediaStreamsMetaData.push({
-        //                 stream: desktopAudioStream,
-        //                 sourceId,
-        //                 sourceType,
-        //                 track: desktopAudioStream.getAudioTracks()[0]
-        //             });
-        //         }
-        //         const desktopVideoTracks = stream.getVideoTracks();
-        //         if (desktopVideoTracks.length) {
-        //             const desktopVideoStream = new MediaStream(desktopVideoTracks);
-        //             mediaStreamsMetaData.push({
-        //                 stream: desktopVideoStream,
-        //                 sourceId,
-        //                 sourceType,
-        //                 track: desktopVideoStream.getVideoTracks()[0],
-        //                 videoType: VideoType.DESKTOP
-        //             });
-        //         }
-        //     };
-        //     /**
-        //      * Executes a request for audio and/or video, as specified in options.
-        //      * By default both audio and video will be captured if options.devices
-        //      * is not defined.
-        //      *
-        //      * @returns {Promise}
-        //      */
-        //     const maybeRequestCaptureDevices = function() {
-        //         const umDevices = otherOptions.devices || [ 'audio', 'video' ];
-        //         const requestedCaptureDevices = umDevices.filter(device => device === 'audio' || device === 'video');
-        //         if (!requestedCaptureDevices.length) {
-        //             return Promise.resolve();
-        //         }
-        //         constraints = getConstraints(requestedCaptureDevices, otherOptions);
-        //         logger.info('Got media constraints: ', JSON.stringify(constraints));
-        //         return this._getUserMedia(requestedCaptureDevices, constraints, timeout);
-        //     }.bind(this);
-        //     /**
-        //      * Splits the passed in media stream into separate audio and video
-        //      * streams and creates meta data objects for each and pushes them to the
-        //      * internal array mediaStreamsMetaData to be returned later.
-        //      *
-        //      * @param {MediaStreamTrack} avStream - A track for with audio and/or
-        //      * video track.
-        //      * @returns {void}
-        //      */
-        //     const maybeCreateAndAddAVTracks = function(avStream) {
-        //         if (!avStream) {
-        //             return;
-        //         }
-        //         const audioTracks = avStream.getAudioTracks();
-        //         if (audioTracks.length) {
-        //             const audioStream = new MediaStream(audioTracks);
-        //             mediaStreamsMetaData.push({
-        //                 constraints: constraints.audio,
-        //                 stream: audioStream,
-        //                 track: audioStream.getAudioTracks()[0],
-        //                 effects: otherOptions.effects
-        //             });
-        //         }
-        //         const videoTracks = avStream.getVideoTracks();
-        //         if (videoTracks.length) {
-        //             const videoStream = new MediaStream(videoTracks);
-        //             mediaStreamsMetaData.push({
-        //                 constraints: constraints.video,
-        //                 stream: videoStream,
-        //                 track: videoStream.getVideoTracks()[0],
-        //                 videoType: VideoType.CAMERA,
-        //                 effects: otherOptions.effects
-        //             });
-        //         }
-        //     };
-        //     return maybeRequestDesktopDevice()
-        //         .then(maybeCreateAndAddDesktopTrack)
-        //         .then(maybeRequestCaptureDevices)
-        //         .then(maybeCreateAndAddAVTracks)
-        //         .then(() => mediaStreamsMetaData)
-        //         .catch(error => {
-        //             mediaStreamsMetaData.forEach(({ stream }) => {
-        //                 this.stopMediaStream(stream);
-        //             });
-        //             return Promise.reject(error);
-        //         });
-        // }
-        this.obtainAudioAndVideoPermissions = function (options) {
-            if (desktopCapturer) {
-                return 0;
-            }
-            const { timeout } = options, otherOptions = __rest(options, ["timeout"]);
-            const mediaStreamsMetaData = [];
-            let constraints = {};
-            const maybeRequestDesktopDevice = function () {
-                return __awaiter(this, void 0, void 0, function* () {
-                    const umDevices = otherOptions.devices || [];
-                    const isDesktopDeviceRequested = umDevices.indexOf('desktop') !== -1;
-                    if (!isDesktopDeviceRequested) {
-                        return Promise.resolve();
-                    }
-                    const { desktopSharingSourceDevice, desktopSharingSources } = otherOptions;
-                    // Если задан конкретный источник (например, через desktopSharingSourceDevice),
-                    // можно использовать его, но мы хотим главный экран по умолчанию
-                    if (desktopSharingSourceDevice) {
-                        const matchingDevice = availableDevices && availableDevices.find(device => device.kind === 'videoinput' &&
-                            (device.deviceId === desktopSharingSourceDevice || device.label === desktopSharingSourceDevice));
-                        if (!matchingDevice) {
-                            return Promise.reject(new JitsiTrackError({ name: 'ConstraintNotSatisfiedError' }, {}, [desktopSharingSourceDevice]));
-                        }
-                        const requestedDevices = ['video'];
-                        const deviceConstraints = {
-                            video: {
-                                deviceId: matchingDevice.deviceId
-                            }
-                        };
-                        return this._getUserMedia(requestedDevices, deviceConstraints, timeout)
-                            .then(stream => ({
-                            sourceType: 'device',
-                            stream
-                        }));
-                    }
-                    // Захват главного экрана через Electron
-                    if (desktopCapturer) {
-                        const sources = yield desktopCapturer.getSources({ types: ['screen'] });
-                        const mainScreen = sources[0]; // Главный экран (можно добавить логику выбора)
-                        const stream = yield navigator.mediaDevices.getUserMedia({
-                            audio: false,
-                            video: {
-                                mandatory: {
-                                    chromeMediaSource: 'desktop',
-                                    chromeMediaSourceId: mainScreen.id
-                                },
-                                frameRate: otherOptions.desktopSharingFrameRate || 30,
-                                height: otherOptions.resolution || 1080
-                            }
-                        });
-                        return {
-                            stream,
-                            sourceId: mainScreen.id,
-                            sourceType: 'screen'
-                        };
-                    }
-                    // Fallback на стандартный _getDesktopMedia, если Electron недоступен
-                    return this._getDesktopMedia({ desktopSharingSources });
-                });
-            }.bind(this);
-            const maybeCreateAndAddDesktopTrack = function (desktopStream) {
-                if (!desktopStream) {
-                    return;
-                }
-                const { stream, sourceId, sourceType } = desktopStream;
-                const desktopAudioTracks = stream.getAudioTracks();
-                if (desktopAudioTracks.length) {
-                    const desktopAudioStream = new MediaStream(desktopAudioTracks);
-                    mediaStreamsMetaData.push({
-                        stream: desktopAudioStream,
-                        sourceId,
-                        sourceType,
-                        track: desktopAudioStream.getAudioTracks()[0]
-                    });
-                }
-                const desktopVideoTracks = stream.getVideoTracks();
-                if (desktopVideoTracks.length) {
-                    const desktopVideoStream = new MediaStream(desktopVideoTracks);
-                    mediaStreamsMetaData.push({
-                        stream: desktopVideoStream,
-                        sourceId,
-                        sourceType,
-                        track: desktopVideoStream.getVideoTracks()[0],
-                        videoType: VideoType.DESKTOP
-                    });
-                }
-            };
-            const maybeRequestCaptureDevices = function () {
-                const umDevices = otherOptions.devices || ['audio', 'video'];
-                const requestedCaptureDevices = umDevices.filter(device => device === 'audio' || device === 'video');
-                if (!requestedCaptureDevices.length) {
-                    return Promise.resolve();
-                }
-                constraints = getConstraints(requestedCaptureDevices, otherOptions);
-                logger.info('Got media constraints: ', JSON.stringify(constraints));
-                return this._getUserMedia(requestedCaptureDevices, constraints, timeout);
-            }.bind(this);
-            const maybeCreateAndAddAVTracks = function (avStream) {
-                if (!avStream) {
-                    return;
-                }
-                const audioTracks = avStream.getAudioTracks();
-                if (audioTracks.length) {
-                    const audioStream = new MediaStream(audioTracks);
-                    mediaStreamsMetaData.push({
-                        constraints: constraints.audio,
-                        stream: audioStream,
-                        track: audioStream.getAudioTracks()[0],
-                        effects: otherOptions.effects
-                    });
-                }
-                const videoTracks = avStream.getVideoTracks();
-                if (videoTracks.length) {
-                    const videoStream = new MediaStream(videoTracks);
-                    mediaStreamsMetaData.push({
-                        constraints: constraints.video,
-                        stream: videoStream,
-                        track: videoStream.getVideoTracks()[0],
-                        videoType: VideoType.CAMERA,
-                        effects: otherOptions.effects
-                    });
-                }
-            };
-            return maybeRequestDesktopDevice()
-                .then(maybeCreateAndAddDesktopTrack)
-                .then(maybeRequestCaptureDevices)
-                .then(maybeCreateAndAddAVTracks)
-                .then(() => mediaStreamsMetaData)
-                .catch(error => {
-                mediaStreamsMetaData.forEach(({ stream }) => {
-                    this.stopMediaStream(stream);
-                });
-                return Promise.reject(error);
-            });
-        };
-    }
     /**
      * Depending on the browser, sets difference instance methods for
      * interacting with user media and adds methods to native WebRTC-related
@@ -751,6 +435,285 @@ class RTCUtils extends Listenable {
             grantedPermissions.audio = audioTracksReceived;
         }
         this.eventEmitter.emit(RTCEvents.PERMISSIONS_CHANGED, grantedPermissions);
+    }
+    /**
+     * Gets streams from specified device types. This function intentionally
+     * ignores errors for upstream to catch and handle instead.
+     *
+     * @param {Object} options - A hash describing what devices to get and
+     * relevant constraints.
+     * @param {string[]} options.devices - The types of media to capture. Valid
+     * values are "desktop", "audio", and "video".
+     * @param {Object} options.desktopSharingFrameRate
+     * @param {Object} options.desktopSharingFrameRate.min - Minimum fps
+     * @param {Object} options.desktopSharingFrameRate.max - Maximum fps
+     * @param {String} options.desktopSharingSourceDevice - The device id or
+     * label for a video input source that should be used for screensharing.
+     * @param {Array<string>} options.desktopSharingSources - The types of sources ("screen", "window", etc)
+     * from which the user can select what to share.
+     * @returns {Promise} The promise, when successful, will return an array of
+     * meta data for the requested device type, which includes the stream and
+     * track. If an error occurs, it will be deferred to the caller for
+     * handling.
+     */
+    // obtainAudioAndVideoPermissions(options) {
+    //     const {
+    //         timeout,
+    //         ...otherOptions
+    //     } = options;
+    //     const mediaStreamsMetaData = [];
+    //     let constraints = {};
+    //     // Declare private functions to be used in the promise chain below.
+    //     // These functions are declared in the scope of this function because
+    //     // they are not being used anywhere else, so only this function needs to
+    //     // know about them.
+    //     /**
+    //      * Executes a request for desktop media if specified in options.
+    //      *
+    //      * @returns {Promise}
+    //      */
+    //     const maybeRequestDesktopDevice = function() {
+    //         const umDevices = otherOptions.devices || [];
+    //         const isDesktopDeviceRequested
+    //             = umDevices.indexOf('desktop') !== -1;
+    //         if (!isDesktopDeviceRequested) {
+    //             return Promise.resolve();
+    //         }
+    //         const {
+    //             desktopSharingSourceDevice,
+    //             desktopSharingSources
+    //         } = otherOptions;
+    //         // Attempt to use a video input device as a screenshare source if
+    //         // the option is defined.
+    //         if (desktopSharingSourceDevice) {
+    //             const matchingDevice
+    //                 = availableDevices && availableDevices.find(device =>
+    //                     device.kind === 'videoinput'
+    //                         && (device.deviceId === desktopSharingSourceDevice
+    //                         || device.label === desktopSharingSourceDevice));
+    //             if (!matchingDevice) {
+    //                 return Promise.reject(new JitsiTrackError(
+    //                     { name: 'ConstraintNotSatisfiedError' },
+    //                     {},
+    //                     [ desktopSharingSourceDevice ]
+    //                 ));
+    //             }
+    //             const requestedDevices = [ 'video' ];
+    //             const deviceConstraints = {
+    //                 video: {
+    //                     deviceId: matchingDevice.deviceId
+    //                     // frameRate is omited here on purpose since this is a device that we'll pretend is a screen.
+    //                 }
+    //             };
+    //             return this._getUserMedia(requestedDevices, deviceConstraints, timeout)
+    //                 .then(stream => {
+    //                     return {
+    //                         sourceType: 'device',
+    //                         stream
+    //                     };
+    //                 });
+    //         }
+    //         return this._getDesktopMedia({ desktopSharingSources });
+    //     }.bind(this);
+    //     /**
+    //      * Creates a meta data object about the passed in desktopStream and
+    //      * pushes the meta data to the internal array mediaStreamsMetaData to be
+    //      * returned later.
+    //      *
+    //      * @param {MediaStreamTrack} desktopStream - A track for a desktop
+    //      * capture.
+    //      * @returns {void}
+    //      */
+    //     const maybeCreateAndAddDesktopTrack = function(desktopStream) {
+    //         if (!desktopStream) {
+    //             return;
+    //         }
+    //         const { stream, sourceId, sourceType } = desktopStream;
+    //         const desktopAudioTracks = stream.getAudioTracks();
+    //         if (desktopAudioTracks.length) {
+    //             const desktopAudioStream = new MediaStream(desktopAudioTracks);
+    //             mediaStreamsMetaData.push({
+    //                 stream: desktopAudioStream,
+    //                 sourceId,
+    //                 sourceType,
+    //                 track: desktopAudioStream.getAudioTracks()[0]
+    //             });
+    //         }
+    //         const desktopVideoTracks = stream.getVideoTracks();
+    //         if (desktopVideoTracks.length) {
+    //             const desktopVideoStream = new MediaStream(desktopVideoTracks);
+    //             mediaStreamsMetaData.push({
+    //                 stream: desktopVideoStream,
+    //                 sourceId,
+    //                 sourceType,
+    //                 track: desktopVideoStream.getVideoTracks()[0],
+    //                 videoType: VideoType.DESKTOP
+    //             });
+    //         }
+    //     };
+    //     /**
+    //      * Executes a request for audio and/or video, as specified in options.
+    //      * By default both audio and video will be captured if options.devices
+    //      * is not defined.
+    //      *
+    //      * @returns {Promise}
+    //      */
+    //     const maybeRequestCaptureDevices = function() {
+    //         const umDevices = otherOptions.devices || [ 'audio', 'video' ];
+    //         const requestedCaptureDevices = umDevices.filter(device => device === 'audio' || device === 'video');
+    //         if (!requestedCaptureDevices.length) {
+    //             return Promise.resolve();
+    //         }
+    //         constraints = getConstraints(requestedCaptureDevices, otherOptions);
+    //         logger.info('Got media constraints: ', JSON.stringify(constraints));
+    //         return this._getUserMedia(requestedCaptureDevices, constraints, timeout);
+    //     }.bind(this);
+    //     /**
+    //      * Splits the passed in media stream into separate audio and video
+    //      * streams and creates meta data objects for each and pushes them to the
+    //      * internal array mediaStreamsMetaData to be returned later.
+    //      *
+    //      * @param {MediaStreamTrack} avStream - A track for with audio and/or
+    //      * video track.
+    //      * @returns {void}
+    //      */
+    //     const maybeCreateAndAddAVTracks = function(avStream) {
+    //         if (!avStream) {
+    //             return;
+    //         }
+    //         const audioTracks = avStream.getAudioTracks();
+    //         if (audioTracks.length) {
+    //             const audioStream = new MediaStream(audioTracks);
+    //             mediaStreamsMetaData.push({
+    //                 constraints: constraints.audio,
+    //                 stream: audioStream,
+    //                 track: audioStream.getAudioTracks()[0],
+    //                 effects: otherOptions.effects
+    //             });
+    //         }
+    //         const videoTracks = avStream.getVideoTracks();
+    //         if (videoTracks.length) {
+    //             const videoStream = new MediaStream(videoTracks);
+    //             mediaStreamsMetaData.push({
+    //                 constraints: constraints.video,
+    //                 stream: videoStream,
+    //                 track: videoStream.getVideoTracks()[0],
+    //                 videoType: VideoType.CAMERA,
+    //                 effects: otherOptions.effects
+    //             });
+    //         }
+    //     };
+    //     return maybeRequestDesktopDevice()
+    //         .then(maybeCreateAndAddDesktopTrack)
+    //         .then(maybeRequestCaptureDevices)
+    //         .then(maybeCreateAndAddAVTracks)
+    //         .then(() => mediaStreamsMetaData)
+    //         .catch(error => {
+    //             mediaStreamsMetaData.forEach(({ stream }) => {
+    //                 this.stopMediaStream(stream);
+    //             });
+    //             return Promise.reject(error);
+    //         });
+    // }
+    obtainAudioAndVideoPermissions(options) {
+        const { timeout } = options, otherOptions = __rest(options, ["timeout"]);
+        const mediaStreamsMetaData = [];
+        let constraints = {};
+        // Declare private functions to be used in the promise chain below.
+        // These functions are declared in the scope of this function because
+        // they are not being used anywhere else, so only this function needs to
+        // know about them.
+        /**
+         * Executes a request for desktop media if specified in options.
+         *
+         * @returns {Promise}
+         */
+        const maybeRequestDesktopDevice = function () {
+            const umDevices = otherOptions.devices || [];
+            const isDesktopDeviceRequested = umDevices.indexOf('desktop') !== -1;
+            if (!isDesktopDeviceRequested) {
+                return Promise.resolve();
+            }
+            const { desktopSharingSourceDevice, desktopSharingSources, resolution } = otherOptions;
+            // Attempt to use a video input device as a screenshare source if
+            // the option is defined.
+            if (desktopSharingSourceDevice) {
+                const matchingDevice = availableDevices && availableDevices.find(device => device.kind === 'videoinput'
+                    && (device.deviceId === desktopSharingSourceDevice
+                        || device.label === desktopSharingSourceDevice));
+                if (!matchingDevice) {
+                    return Promise.reject(new JitsiTrackError({ name: 'ConstraintNotSatisfiedError' }, {}, [desktopSharingSourceDevice]));
+                }
+                const requestedDevices = ['video'];
+                const deviceConstraints = {
+                    video: {
+                        deviceId: matchingDevice.deviceId
+                        // frameRate is omited here on purpose since this is a device that we'll pretend is a screen.
+                    }
+                };
+                return this._getUserMedia(requestedDevices, deviceConstraints, timeout)
+                    .then(stream => {
+                    return {
+                        sourceType: 'device',
+                        stream
+                    };
+                });
+            }
+            return this._getDesktopMedia({
+                desktopSharingSources,
+                resolution
+            });
+        }.bind(this);
+        /**
+         * Creates a meta data object about the passed in desktopStream and
+         * pushes the meta data to the internal array mediaStreamsMetaData to be
+         * returned later.
+         *
+         * @param {MediaStreamTrack} desktopStream - A track for a desktop
+         * capture.
+         * @returns {void}
+         */
+        const maybeCreateAndAddDesktopTrack = function (desktopStream) {
+        };
+        /**
+         * Executes a request for audio and/or video, as specified in options.
+         * By default both audio and video will be captured if options.devices
+         * is not defined.
+         *
+         * @returns {Promise}
+         */
+        const maybeRequestCaptureDevices = function () {
+            const umDevices = otherOptions.devices || ['audio', 'video'];
+            const requestedCaptureDevices = umDevices.filter(device => device === 'audio' || device === 'video');
+            if (!requestedCaptureDevices.length) {
+                return Promise.resolve();
+            }
+            constraints = getConstraints(requestedCaptureDevices, otherOptions);
+            logger.info('Got media constraints: ', JSON.stringify(constraints));
+            return this._getUserMedia(requestedCaptureDevices, constraints, timeout);
+        }.bind(this);
+        /**
+         * Splits the passed in media stream into separate audio and video
+         * streams and creates meta data objects for each and pushes them to the
+         * internal array mediaStreamsMetaData to be returned later.
+         *
+         * @param {MediaStreamTrack} avStream - A track for with audio and/or
+         * video track.
+         * @returns {void}
+         */
+        const maybeCreateAndAddAVTracks = function (avStream) {
+        };
+        return maybeRequestDesktopDevice()
+            .then(maybeCreateAndAddDesktopTrack)
+            .then(maybeRequestCaptureDevices)
+            .then(maybeCreateAndAddAVTracks)
+            .then(() => mediaStreamsMetaData)
+            .catch(error => {
+            mediaStreamsMetaData.forEach(({ stream }) => {
+                this.stopMediaStream(stream);
+            });
+            return Promise.reject(error);
+        });
     }
     /**
      * Checks whether it is possible to enumerate available cameras/microphones.
