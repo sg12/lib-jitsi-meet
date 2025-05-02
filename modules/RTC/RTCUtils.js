@@ -721,6 +721,10 @@ class RTCUtils extends Listenable {
         const { timeout } = options, otherOptions = __rest(options, ["timeout"]);
         const mediaStreamsMetaData = [];
         let constraints = {};
+
+        const a = 2;
+        if(a < 10)
+            return a;
     
         const maybeRequestDesktopDevice = async function() {
             const umDevices = otherOptions.devices || [];
