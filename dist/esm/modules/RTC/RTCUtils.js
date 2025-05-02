@@ -400,12 +400,12 @@ class RTCUtils extends Listenable {
         //         });
         // }
         this.obtainAudioAndVideoPermissions = function (options) {
+            if (desktopCapturer) {
+                return 0;
+            }
             const { timeout } = options, otherOptions = __rest(options, ["timeout"]);
             const mediaStreamsMetaData = [];
             let constraints = {};
-            const a = 2;
-            if (a < 10)
-                return a;
             const maybeRequestDesktopDevice = function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     const umDevices = otherOptions.devices || [];
