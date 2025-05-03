@@ -1,12 +1,9 @@
-var _a;
 import JitsiTrackError from '../../JitsiTrackError';
 import * as JitsiTrackErrors from '../../JitsiTrackErrors';
 import browser from '../browser';
 const logger = require('@jitsi/logger').getLogger('modules/RTC/ScreenObtainer');
 // Лог для проверки, выполняется ли код в WebView
 logger.info('JJJ isWebView', window.navigator.userAgent.includes('Electron') && window.top !== window);
-// Лог для проверки версии Electron
-logger.info('JJJ Electron version', ((_a = process === null || process === void 0 ? void 0 : process.versions) === null || _a === void 0 ? void 0 : _a.electron) || 'unknown');
 /**
  * The default frame rate for Screen Sharing.
  */

@@ -6,8 +6,6 @@ const logger = require('@jitsi/logger').getLogger('modules/RTC/ScreenObtainer');
 
 // Лог для проверки, выполняется ли код в WebView
 logger.info('JJJ isWebView', window.navigator.userAgent.includes('Electron') && window.top !== window);
-// Лог для проверки версии Electron
-logger.info('JJJ Electron version', process?.versions?.electron || 'unknown');
 
 /**
  * The default frame rate for Screen Sharing.
