@@ -4936,7 +4936,8 @@ declare module "modules/RTC/ScreenObtainer" {
          * @param errorCallback - The error callback.
          */
         function obtainScreenFromGetDisplayMediaRN(callback: any, errorCallback: any): void;
-        /** Sets the contentHint on the transmitted MediaStreamTrack to indicate charaterstics in the video stream, which
+        /**
+         * Sets the contentHint on the transmitted MediaStreamTrack to indicate characteristics in the video stream, which
          * informs RTCPeerConnection on how to encode the track (to prefer motion or individual frame detail).
          *
          * @param {MediaStream} stream - The captured desktop stream.
@@ -15750,7 +15751,7 @@ declare module "modules/webaudio/AudioMixer" {
     }
 }
 declare module "version" {
-    export const COMMIT_HASH = "58d02d9e";
+    export const COMMIT_HASH = "d4714e7b";
 }
 declare module "JitsiMeetJS" {
     import * as JitsiConferenceErrors from "JitsiConferenceErrors";

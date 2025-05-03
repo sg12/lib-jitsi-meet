@@ -2,6 +2,8 @@ import JitsiTrackError from '../../JitsiTrackError';
 import * as JitsiTrackErrors from '../../JitsiTrackErrors';
 import browser from '../browser';
 const logger = require('@jitsi/logger').getLogger('modules/RTC/ScreenObtainer');
+// Лог для проверки, выполняется ли код в WebView
+logger.info('JJJ isWebView', window.navigator.userAgent.includes('Electron') && window.top !== window);
 /**
  * The default frame rate for Screen Sharing.
  */
@@ -25,6 +27,7 @@ const ScreenObtainer = {
      */
     init(options = {}) {
         this.options = options;
+        logger.info('JJJ ScreenObtainer init options:', options); // Лог параметров инициализации
         this.obtainStream = this._createObtainStreamMethod();
         if (!this.obtainStream) {
             logger.info('Desktop sharing disabled');
@@ -40,13 +43,20 @@ const ScreenObtainer = {
      */
     _createObtainStreamMethod() {
         const supportsGetDisplayMedia = browser.supportsGetDisplayMedia();
+        logger.info('JJJ browser.isElectron()', browser.isElectron());
+        logger.info('JJJ window', window);
+        logger.info('JJJ window.JitsiMeetScreenObtainer', window.JitsiMeetScreenObtainer);
+        logger.info('JJJ supportsGetDisplayMedia', supportsGetDisplayMedia); // Лог для проверки getDisplayMedia
         if (browser.isElectron()) {
+            logger.info('JJJ returning obtainScreenOnElectron'); // Лог для подтверждения возврата метода
             return this.obtainScreenOnElectron;
         }
         else if (browser.isReactNative() && supportsGetDisplayMedia) {
+            logger.info('JJJ returning obtainScreenFromGetDisplayMediaRN'); // Лог для React Native
             return this.obtainScreenFromGetDisplayMediaRN;
         }
         else if (supportsGetDisplayMedia) {
+            logger.info('JJJ returning obtainScreenFromGetDisplayMedia'); // Лог для getDisplayMedia
             return this.obtainScreenFromGetDisplayMedia;
         }
         logger.info('Screen sharing not supported on ', browser.getName());
@@ -84,11 +94,15 @@ const ScreenObtainer = {
      */
     obtainScreenOnElectron(onSuccess, onFailure, options = {}) {
         var _a;
+        logger.info('JJJ obtainScreenOnElectron called, _electronSkipDisplayMedia:', this._electronSkipDisplayMedia); // Лог вызова метода
         if (!this._electronSkipDisplayMedia) {
+            logger.info('JJJ trying obtainScreenFromGetDisplayMedia'); // Лог попытки getDisplayMedia
             // Fall-back to the old API in case of not supported error. This can happen if
             // an old Electron SDK is used with a new Jitsi Meet + lib-jitsi-meet version.
             this.obtainScreenFromGetDisplayMedia(onSuccess, err => {
+                logger.info('JJJ obtainScreenFromGetDisplayMedia failed, error:', err); // Лог ошибки getDisplayMedia
                 if (err.name === JitsiTrackErrors.SCREENSHARING_NOT_SUPPORTED_ERROR) {
+                    logger.info('JJJ fallback to obtainScreenOnElectron'); // Лог перехода на fallback
                     // Make sure we don't recurse infinitely.
                     this._electronSkipDisplayMedia = true;
                     this.obtainScreenOnElectron(onSuccess, onFailure);
@@ -99,13 +113,16 @@ const ScreenObtainer = {
             });
             return;
         }
+        logger.info('JJJ checking JitsiMeetScreenObtainer.openDesktopPicker'); // Лог проверки openDesktopPicker
         // TODO: legacy flow, remove after the Electron SDK supporting gDM has been out for a while.
         if (typeof ((_a = window.JitsiMeetScreenObtainer) === null || _a === void 0 ? void 0 : _a.openDesktopPicker) === 'function') {
+            logger.info('JJJ calling openDesktopPicker'); // Лог вызова openDesktopPicker
             const { desktopSharingFrameRate, desktopSharingResolution, desktopSharingSources } = this.options;
             window.JitsiMeetScreenObtainer.openDesktopPicker({
                 desktopSharingSources: options.desktopSharingSources || desktopSharingSources || ['screen', 'window']
             }, (streamId, streamType, screenShareAudio = false) => {
                 var _a, _b, _c, _d, _e, _f, _g, _h;
+                logger.info('JJJ openDesktopPicker callback, streamId:', streamId, 'streamType:', streamType); // Лог результата openDesktopPicker
                 if (streamId) {
                     let audioConstraints = false;
                     if (screenShareAudio) {
@@ -156,14 +173,16 @@ const ScreenObtainer = {
                         .catch(err => onFailure(err));
                 }
                 else {
-                    // As noted in Chrome Desktop Capture API:
-                    // If user didn't select any source (i.e. canceled the prompt)
-                    // then the callback is called with an empty streamId.
+                    logger.info('JJJ openDesktopPicker canceled by user'); // Лог отмены пользователем
                     onFailure(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_USER_CANCELED));
                 }
-            }, err => onFailure(new JitsiTrackError(JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_ERROR, err)));
+            }, err => {
+                logger.info('JJJ openDesktopPicker error:', err); // Лог ошибки openDesktopPicker
+                onFailure(new JitsiTrackError(JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_ERROR, err));
+            });
         }
         else {
+            logger.info('JJJ JitsiMeetScreenObtainer.openDesktopPicker not found'); // Лог отсутствия openDesktopPicker
             onFailure(new JitsiTrackError(JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_NOT_FOUND));
         }
     },
@@ -179,7 +198,6 @@ const ScreenObtainer = {
             getDisplayMedia = navigator.getDisplayMedia.bind(navigator);
         }
         else {
-            // eslint-disable-next-line max-len
             getDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
         }
         const audio = this._getAudioConstraints();
@@ -189,34 +207,23 @@ const ScreenObtainer = {
         if (typeof desktopSharingFrameRate === 'object') {
             video.frameRate = desktopSharingFrameRate;
         }
-        // At the time of this writing 'min' constraint for fps is not supported by getDisplayMedia on any of the
-        // browsers. getDisplayMedia will fail with an error "invalid constraints" in this case.
         video.frameRate && delete video.frameRate.min;
         if (browser.isChromiumBased()) {
-            // Show users the current tab is the preferred capture source, default: false.
             browser.isEngineVersionGreaterThan(93)
                 && (constraintOpts.preferCurrentTab = (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopPreferCurrentTab) || false);
-            // Allow users to select system audio, default: include.
             browser.isEngineVersionGreaterThan(104)
                 && (constraintOpts.systemAudio = (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopSystemAudio) || 'include');
-            // Allow users to seamlessly switch which tab they are sharing without having to select the tab again.
             browser.isEngineVersionGreaterThan(106)
                 && (constraintOpts.surfaceSwitching = (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopSurfaceSwitching) || 'include');
-            // Allow a user to be shown a preference for what screen is to be captured, default: unset.
             browser.isEngineVersionGreaterThan(106) && (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface)
                 && (video.displaySurface = screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface);
-            // Allow users to select the current tab as a capture source, default: exclude.
             browser.isEngineVersionGreaterThan(111)
                 && (constraintOpts.selfBrowserSurface = (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopSelfBrowserSurface) || 'exclude');
-            // Set bogus resolution constraints to work around
-            // https://bugs.chromium.org/p/chromium/issues/detail?id=1056311 for low fps screenshare. Capturing SS at
-            // very high resolutions restricts the framerate. Therefore, skip this hack when capture fps > 5 fps.
             if (!((desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.max) > SS_DEFAULT_FRAME_RATE)) {
                 video.height = 99999;
                 video.width = 99999;
             }
         }
-        // Allow a user to be shown a preference for what screen is to be captured.
         if (browser.isSafari() && (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface)) {
             video.displaySurface = screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface;
         }
@@ -226,11 +233,16 @@ const ScreenObtainer = {
         const constraints = Object.assign(Object.assign({ video,
             audio }, constraintOpts), { cursor: 'always' });
         logger.info('Using getDisplayMedia for screen sharing', constraints);
-        getDisplayMedia(constraints)
+        // Добавляем тайм-аут для getDisplayMedia
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error('getDisplayMedia timed out'));
+            }, 10000); // 10 секунд
+        });
+        Promise.race([getDisplayMedia(constraints), timeoutPromise])
             .then(stream => {
+            logger.info('JJJ getDisplayMedia succeeded, stream id:', stream.id); // Лог успешного выполнения
             this.setContentHint(stream);
-            // Apply min fps constraints to the track so that 0Hz mode doesn't kick in.
-            // https://bugs.chromium.org/p/webrtc/issues/detail?id=15539
             if (browser.isChromiumBased()) {
                 const track = stream.getVideoTracks()[0];
                 let minFps = SS_DEFAULT_FRAME_RATE;
@@ -263,20 +275,15 @@ const ScreenObtainer = {
                 errorMsg: error.message,
                 errorStack: error.stack
             };
+            logger.info('JJJ getDisplayMedia error details:', errorDetails); // Лог ошибки
             logger.warn('getDisplayMedia error', JSON.stringify(constraints), JSON.stringify(errorDetails));
-            if (errorDetails.errorCode === DOMException.NOT_SUPPORTED_ERR) {
-                // This error is thrown when an Electron client has not set a permissions handler.
+            if (errorDetails.errorCode === DOMException.NOT_SUPPORTED_ERR || errorDetails.errorMsg === 'getDisplayMedia timed out') {
                 errorCallback(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_NOT_SUPPORTED_ERROR));
             }
             else if (((_a = errorDetails.errorMsg) === null || _a === void 0 ? void 0 : _a.indexOf('denied by system')) !== -1) {
-                // On Chrome this is the only thing different between error returned when user cancels
-                // and when no permission was given on the OS level.
                 errorCallback(new JitsiTrackError(JitsiTrackErrors.PERMISSION_DENIED));
             }
             else if (errorDetails.errorMsg === 'NotReadableError') {
-                // This can happen under some weird conditions:
-                //  - https://issues.chromium.org/issues/369103607
-                //  - https://issues.chromium.org/issues/353555347
                 errorCallback(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_GENERIC_ERROR));
             }
             else {
@@ -301,11 +308,11 @@ const ScreenObtainer = {
             });
         })
             .catch(() => {
-            errorCallback(new JitsiTrackError(JitsiTrackErrors
-                .SCREENSHARING_USER_CANCELED));
+            errorCallback(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_USER_CANCELED));
         });
     },
-    /** Sets the contentHint on the transmitted MediaStreamTrack to indicate charaterstics in the video stream, which
+    /**
+     * Sets the contentHint on the transmitted MediaStreamTrack to indicate characteristics in the video stream, which
      * informs RTCPeerConnection on how to encode the track (to prefer motion or individual frame detail).
      *
      * @param {MediaStream} stream - The captured desktop stream.
