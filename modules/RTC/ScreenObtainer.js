@@ -50,6 +50,10 @@ const ScreenObtainer = {
     _createObtainStreamMethod() {
         const supportsGetDisplayMedia = browser.supportsGetDisplayMedia();
 
+        logger.info('JJJ browser.isElectron()', browser.isElectron());
+        logger.info('JJJ window', window);
+        logger.info('JJJ window.JitsiMeetScreenObtainer', window.JitsiMeetScreenObtainer);
+
         if (browser.isElectron()) {
             return this.obtainScreenOnElectron;
         } else if (browser.isReactNative() && supportsGetDisplayMedia) {
