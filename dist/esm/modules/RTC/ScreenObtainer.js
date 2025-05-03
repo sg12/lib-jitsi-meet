@@ -94,25 +94,7 @@ const ScreenObtainer = {
      */
     obtainScreenOnElectron(onSuccess, onFailure, options = {}) {
         var _a;
-        logger.info('JJJ obtainScreenOnElectron called, _electronSkipDisplayMedia:', this._electronSkipDisplayMedia); // Лог вызова метода
-        if (!this._electronSkipDisplayMedia) {
-            logger.info('JJJ trying obtainScreenFromGetDisplayMedia'); // Лог попытки getDisplayMedia
-            // Fall-back to the old API in case of not supported error. This can happen if
-            // an old Electron SDK is used with a new Jitsi Meet + lib-jitsi-meet version.
-            this.obtainScreenFromGetDisplayMedia(onSuccess, err => {
-                logger.info('JJJ obtainScreenFromGetDisplayMedia failed, error:', err); // Лог ошибки getDisplayMedia
-                if (err.name === JitsiTrackErrors.SCREENSHARING_NOT_SUPPORTED_ERROR) {
-                    logger.info('JJJ fallback to obtainScreenOnElectron'); // Лог перехода на fallback
-                    // Make sure we don't recurse infinitely.
-                    this._electronSkipDisplayMedia = true;
-                    this.obtainScreenOnElectron(onSuccess, onFailure);
-                }
-                else {
-                    onFailure(err);
-                }
-            });
-            return;
-        }
+        logger.info('JJJ obtainScreenOnElectron called, _electronSkipDisplayMedia: true (forced)'); // Лог вызова метода
         logger.info('JJJ checking JitsiMeetScreenObtainer.openDesktopPicker'); // Лог проверки openDesktopPicker
         // TODO: legacy flow, remove after the Electron SDK supporting gDM has been out for a while.
         if (typeof ((_a = window.JitsiMeetScreenObtainer) === null || _a === void 0 ? void 0 : _a.openDesktopPicker) === 'function') {
