@@ -1,9 +1,13 @@
-
 import JitsiTrackError from '../../JitsiTrackError';
 import * as JitsiTrackErrors from '../../JitsiTrackErrors';
 import browser from '../browser';
 
 const logger = require('@jitsi/logger').getLogger('modules/RTC/ScreenObtainer');
+
+// Лог для проверки, выполняется ли код в WebView
+logger.info('JJJ isWebView', window.navigator.userAgent.includes('Electron') && window.top !== window);
+// Лог для проверки версии Electron
+logger.info('JJJ Electron version', process?.versions?.electron || 'unknown');
 
 /**
  * The default frame rate for Screen Sharing.
@@ -20,7 +24,6 @@ const ScreenObtainer = {
      * after it's done.
      * {@type Promise|null}
      */
-
     obtainStream: null,
 
     /**
@@ -31,6 +34,7 @@ const ScreenObtainer = {
      */
     init(options = {}) {
         this.options = options;
+        logger.info('JJJ ScreenObtainer init options:', options); // Лог параметров инициализации
         this.obtainStream = this._createObtainStreamMethod();
 
         if (!this.obtainStream) {
@@ -53,12 +57,16 @@ const ScreenObtainer = {
         logger.info('JJJ browser.isElectron()', browser.isElectron());
         logger.info('JJJ window', window);
         logger.info('JJJ window.JitsiMeetScreenObtainer', window.JitsiMeetScreenObtainer);
+        logger.info('JJJ supportsGetDisplayMedia', supportsGetDisplayMedia); // Лог для проверки getDisplayMedia
 
         if (browser.isElectron()) {
+            logger.info('JJJ returning obtainScreenOnElectron'); // Лог для подтверждения возврата метода
             return this.obtainScreenOnElectron;
         } else if (browser.isReactNative() && supportsGetDisplayMedia) {
+            logger.info('JJJ returning obtainScreenFromGetDisplayMediaRN'); // Лог для React Native
             return this.obtainScreenFromGetDisplayMediaRN;
         } else if (supportsGetDisplayMedia) {
+            logger.info('JJJ returning obtainScreenFromGetDisplayMedia'); // Лог для getDisplayMedia
             return this.obtainScreenFromGetDisplayMedia;
         }
         logger.info('Screen sharing not supported on ', browser.getName());
@@ -100,11 +108,15 @@ const ScreenObtainer = {
      * @param {Object} options - Optional parameters.
      */
     obtainScreenOnElectron(onSuccess, onFailure, options = {}) {
+        logger.info('JJJ obtainScreenOnElectron called, _electronSkipDisplayMedia:', this._electronSkipDisplayMedia); // Лог вызова метода
         if (!this._electronSkipDisplayMedia) {
+            logger.info('JJJ trying obtainScreenFromGetDisplayMedia'); // Лог попытки getDisplayMedia
             // Fall-back to the old API in case of not supported error. This can happen if
             // an old Electron SDK is used with a new Jitsi Meet + lib-jitsi-meet version.
             this.obtainScreenFromGetDisplayMedia(onSuccess, err => {
+                logger.info('JJJ obtainScreenFromGetDisplayMedia failed, error:', err); // Лог ошибки getDisplayMedia
                 if (err.name === JitsiTrackErrors.SCREENSHARING_NOT_SUPPORTED_ERROR) {
+                    logger.info('JJJ fallback to obtainScreenOnElectron'); // Лог перехода на fallback
                     // Make sure we don't recurse infinitely.
                     this._electronSkipDisplayMedia = true;
                     this.obtainScreenOnElectron(onSuccess, onFailure);
@@ -116,8 +128,10 @@ const ScreenObtainer = {
             return;
         }
 
+        logger.info('JJJ checking JitsiMeetScreenObtainer.openDesktopPicker'); // Лог проверки openDesktopPicker
         // TODO: legacy flow, remove after the Electron SDK supporting gDM has been out for a while.
         if (typeof window.JitsiMeetScreenObtainer?.openDesktopPicker === 'function') {
+            logger.info('JJJ calling openDesktopPicker'); // Лог вызова openDesktopPicker
             const { desktopSharingFrameRate, desktopSharingResolution, desktopSharingSources } = this.options;
 
             window.JitsiMeetScreenObtainer.openDesktopPicker(
@@ -126,6 +140,7 @@ const ScreenObtainer = {
                         options.desktopSharingSources || desktopSharingSources || [ 'screen', 'window' ]
                 },
                 (streamId, streamType, screenShareAudio = false) => {
+                    logger.info('JJJ openDesktopPicker callback, streamId:', streamId, 'streamType:', streamType); // Лог результата openDesktopPicker
                     if (streamId) {
                         let audioConstraints = false;
 
@@ -180,18 +195,20 @@ const ScreenObtainer = {
                             })
                             .catch(err => onFailure(err));
                     } else {
-                        // As noted in Chrome Desktop Capture API:
-                        // If user didn't select any source (i.e. canceled the prompt)
-                        // then the callback is called with an empty streamId.
+                        logger.info('JJJ openDesktopPicker canceled by user'); // Лог отмены пользователем
                         onFailure(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_USER_CANCELED));
                     }
                 },
-                err => onFailure(new JitsiTrackError(
-                    JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_ERROR,
-                    err
-                ))
+                err => {
+                    logger.info('JJJ openDesktopPicker error:', err); // Лог ошибки openDesktopPicker
+                    onFailure(new JitsiTrackError(
+                        JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_ERROR,
+                        err
+                    ));
+                }
             );
         } else {
+            logger.info('JJJ JitsiMeetScreenObtainer.openDesktopPicker not found'); // Лог отсутствия openDesktopPicker
             onFailure(new JitsiTrackError(JitsiTrackErrors.ELECTRON_DESKTOP_PICKER_NOT_FOUND));
         }
     },
@@ -317,6 +334,7 @@ const ScreenObtainer = {
                     errorStack: error.stack
                 };
 
+                logger.info('JJJ getDisplayMedia error details:', errorDetails); // Лог ошибки getDisplayMedia
                 logger.warn('getDisplayMedia error', JSON.stringify(constraints), JSON.stringify(errorDetails));
 
                 if (errorDetails.errorCode === DOMException.NOT_SUPPORTED_ERR) {
@@ -354,8 +372,7 @@ const ScreenObtainer = {
                     sourceId: stream.id });
             })
             .catch(() => {
-                errorCallback(new JitsiTrackError(JitsiTrackErrors
-                    .SCREENSHARING_USER_CANCELED));
+                errorCallback(new JitsiTrackError(JitsiTrackErrors.SCREENSHARING_USER_CANCELED));
             });
     },
 
