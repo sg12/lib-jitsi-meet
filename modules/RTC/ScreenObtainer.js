@@ -139,11 +139,12 @@ const ScreenObtainer = {
                             // which, in the case a users has multiple monitors, leads to them being shared all
                             // at once. However we tested with chromeMediaSourceId present and it seems to be
                             // working properly.
-                            if (streamType === 'screen') {
-                                audioConstraints.mandatory = {
-                                    chromeMediaSource: 'desktop'
-                                };
-                            }
+                            // if (streamType === 'screen') {
+                            audioConstraints.mandatory = {
+                                chromeMediaSource: 'desktop',
+                                chromeMediaSourceId: streamId,
+                            };
+                            // }
                         }
 
                         const constraints = {
