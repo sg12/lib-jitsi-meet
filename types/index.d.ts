@@ -15751,7 +15751,7 @@ declare module "modules/webaudio/AudioMixer" {
     }
 }
 declare module "version" {
-    export const COMMIT_HASH = "16d46907";
+    export const COMMIT_HASH = "c64a39e2";
 }
 declare module "JitsiMeetJS" {
     import * as JitsiConferenceErrors from "JitsiConferenceErrors";

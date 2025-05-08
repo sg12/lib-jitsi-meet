@@ -202,10 +202,10 @@ const ScreenObtainer = {
                 && (video.displaySurface = screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface);
             browser.isEngineVersionGreaterThan(111)
                 && (constraintOpts.selfBrowserSurface = (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopSelfBrowserSurface) || 'exclude');
-            if (!((desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.max) > SS_DEFAULT_FRAME_RATE)) {
-                video.height = 99999;
-                video.width = 99999;
-            }
+            // if (!(desktopSharingFrameRate?.max > SS_DEFAULT_FRAME_RATE)) {
+            //     video.height = 99999;
+            //     video.width = 99999;
+            // }
         }
         if (browser.isSafari() && (screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface)) {
             video.displaySurface = screenShareSettings === null || screenShareSettings === void 0 ? void 0 : screenShareSettings.desktopDisplaySurface;

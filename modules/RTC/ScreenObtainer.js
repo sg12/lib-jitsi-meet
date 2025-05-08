@@ -233,10 +233,10 @@ const ScreenObtainer = {
                 && (video.displaySurface = screenShareSettings?.desktopDisplaySurface);
             browser.isEngineVersionGreaterThan(111)
                 && (constraintOpts.selfBrowserSurface = screenShareSettings?.desktopSelfBrowserSurface || 'exclude');
-            if (!(desktopSharingFrameRate?.max > SS_DEFAULT_FRAME_RATE)) {
-                video.height = 99999;
-                video.width = 99999;
-            }
+            // if (!(desktopSharingFrameRate?.max > SS_DEFAULT_FRAME_RATE)) {
+            //     video.height = 99999;
+            //     video.width = 99999;
+            // }
         }
 
         if (browser.isSafari() && screenShareSettings?.desktopDisplaySurface) {
