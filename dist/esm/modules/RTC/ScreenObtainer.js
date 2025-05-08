@@ -103,7 +103,7 @@ const ScreenObtainer = {
             window.JitsiMeetScreenObtainer.openDesktopPicker({
                 desktopSharingSources: options.desktopSharingSources || desktopSharingSources || ['screen', 'window']
             }, (streamId, streamType, screenShareAudio = false) => {
-                var _a, _b, _c, _d, _e, _f, _g, _h;
+                var _a, _b;
                 logger.info('JJJ openDesktopPicker callback, streamId:', streamId, 'streamType:', streamType); // Лог результата openDesktopPicker
                 if (streamId) {
                     let audioConstraints = false;
@@ -136,10 +136,10 @@ const ScreenObtainer = {
                                 chromeMediaSourceId: streamId,
                                 minFrameRate: (_a = desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.min) !== null && _a !== void 0 ? _a : SS_DEFAULT_FRAME_RATE,
                                 maxFrameRate: (_b = desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.max) !== null && _b !== void 0 ? _b : SS_DEFAULT_FRAME_RATE,
-                                minWidth: (_c = desktopSharingResolution === null || desktopSharingResolution === void 0 ? void 0 : desktopSharingResolution.width) === null || _c === void 0 ? void 0 : _c.min,
-                                minHeight: (_d = desktopSharingResolution === null || desktopSharingResolution === void 0 ? void 0 : desktopSharingResolution.height) === null || _d === void 0 ? void 0 : _d.min,
-                                maxWidth: (_f = (_e = desktopSharingResolution === null || desktopSharingResolution === void 0 ? void 0 : desktopSharingResolution.width) === null || _e === void 0 ? void 0 : _e.max) !== null && _f !== void 0 ? _f : window.screen.width,
-                                maxHeight: (_h = (_g = desktopSharingResolution === null || desktopSharingResolution === void 0 ? void 0 : desktopSharingResolution.height) === null || _g === void 0 ? void 0 : _g.max) !== null && _h !== void 0 ? _h : window.screen.height
+                                minWidth: 240,
+                                minHeight: 240,
+                                maxWidth: 480,
+                                maxHeight: 480 // Ограничиваем до 480
                             }
                         }
                     };
