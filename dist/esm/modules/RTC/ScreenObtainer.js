@@ -138,8 +138,8 @@ const ScreenObtainer = {
                                 maxFrameRate: (_b = desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.max) !== null && _b !== void 0 ? _b : SS_DEFAULT_FRAME_RATE,
                                 minWidth: 240,
                                 minHeight: 240,
-                                maxWidth: 480,
-                                maxHeight: 480 // Ограничиваем до 480
+                                maxWidth: 900,
+                                maxHeight: 500 // Ограничиваем до 480
                             }
                         }
                     };
