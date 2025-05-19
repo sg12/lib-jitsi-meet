@@ -103,7 +103,6 @@ const ScreenObtainer = {
             window.JitsiMeetScreenObtainer.openDesktopPicker({
                 desktopSharingSources: options.desktopSharingSources || desktopSharingSources || ['screen', 'window']
             }, (streamId, streamType, screenShareAudio = false) => {
-                var _a, _b;
                 logger.info('JJJ openDesktopPicker callback, streamId:', streamId, 'streamType:', streamType); // Лог результата openDesktopPicker
                 if (streamId) {
                     let audioConstraints = false;
@@ -134,12 +133,12 @@ const ScreenObtainer = {
                             mandatory: {
                                 chromeMediaSource: 'desktop',
                                 chromeMediaSourceId: streamId,
-                                minFrameRate: (_a = desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.min) !== null && _a !== void 0 ? _a : SS_DEFAULT_FRAME_RATE,
-                                maxFrameRate: (_b = desktopSharingFrameRate === null || desktopSharingFrameRate === void 0 ? void 0 : desktopSharingFrameRate.max) !== null && _b !== void 0 ? _b : SS_DEFAULT_FRAME_RATE,
-                                minWidth: 360,
-                                minHeight: 360,
-                                maxWidth: 900,
-                                maxHeight: 720 // Ограничиваем до 480
+                                minFrameRate: 10,
+                                maxFrameRate: 30,
+                                minWidth: 900,
+                                minHeight: 720,
+                                maxWidth: 1280,
+                                maxHeight: 1000 // Ограничиваем до 480
                             }
                         }
                     };

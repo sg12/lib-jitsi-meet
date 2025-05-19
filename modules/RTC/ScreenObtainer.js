@@ -153,12 +153,12 @@ const ScreenObtainer = {
                                 mandatory: {
                                     chromeMediaSource: 'desktop',
                                     chromeMediaSourceId: streamId,
-                                    minFrameRate: desktopSharingFrameRate?.min ?? SS_DEFAULT_FRAME_RATE,
-                                    maxFrameRate: desktopSharingFrameRate?.max ?? SS_DEFAULT_FRAME_RATE,
-                                    minWidth: 360,
-                                    minHeight: 360,
-                                    maxWidth: 1000, // Ограничиваем до 480
-                                    maxHeight: 800 // Ограничиваем до 480
+                                    minFrameRate: 10,
+                                    maxFrameRate: 30,
+                                    minWidth: 900,
+                                    minHeight: 720,
+                                    maxWidth: 1280, // Ограничиваем до 480
+                                    maxHeight: 1000 // Ограничиваем до 480
                                 }
                             }
                         };
